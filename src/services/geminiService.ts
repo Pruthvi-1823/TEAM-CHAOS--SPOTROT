@@ -3,7 +3,7 @@ import { GoogleGenAI, Type } from "@google/genai";
 const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
 
 export async function analyzeProduceCondition(base64Image: string, produceType: string) {
-  const model = "gemini-1.5-flash";
+  const model = "gemini-2.0-flash";
   
   const prompt = `Analyze this image of ${produceType}. 
   Identify the exact produce type seen in the image to verify against the label '${produceType}'.
@@ -60,7 +60,7 @@ export async function predictSpoilage(data: {
   humidity: number,
   hoursInTransit: number
 }) {
-  const model = "gemini-1.5-flash";
+  const model = "gemini-2.0-flash";
   
   const prompt = `Analyze the potential spoilage risk for a batch in the supply chain:
   Crop Type: ${data.cropType}
