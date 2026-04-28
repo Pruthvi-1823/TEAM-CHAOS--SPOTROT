@@ -1,0 +1,6 @@
+{
+  "name": "SpotRot",
+  "description": "Intelligent Commodity Condition Tracker using Gemini Vision AI to reduce supply chain spoilage.",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["Image Analysis", "Predictive Analytics"]
+}

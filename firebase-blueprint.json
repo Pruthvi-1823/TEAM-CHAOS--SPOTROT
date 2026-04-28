@@ -1,0 +1,66 @@
+{
+  "entities": {
+    "Batch": {
+      "title": "Produce Batch",
+      "description": "A batch of produce being tracked through the supply chain.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "description": "Name or ID of the batch" },
+        "type": { "type": "string", "description": "Type of produce (e.g. Tomatoes, Onions)" },
+        "origin": { "type": "string", "description": "Source of the produce" },
+        "status": { "type": "string", "enum": ["active", "completed", "spoiled"], "description": "Current tracking status" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "createdBy": { "type": "string" }
+      },
+      "required": ["title", "type", "origin", "status", "createdAt"]
+    },
+    "Scan": {
+      "title": "Batch Scan",
+      "description": "An AI scan of a produce batch at a specific handoff point.",
+      "type": "object",
+      "properties": {
+        "batchId": { "type": "string" },
+        "produceType": { "type": "string" },
+        "location": { "type": "string", "description": "Location name where scan happened" },
+        "locationType": { "type": "string", "enum": ["Origin", "Transit", "Storage", "Terminal"] },
+        "imageUrl": { "type": "string" },
+        "spoilageScore": { "type": "number", "description": "Score from 0-10 (10 being most spoiled)" },
+        "predictedShelfLife": { "type": "string", "description": "Estimated remaining shelf life" },
+        "riskLevel": { "type": "string", "enum": ["Low", "Medium", "High"] },
+        "analysisNotes": { "type": "string" },
+        "reroutingDecision": { "type": "string" },
+        "temperature": { "type": "number" },
+        "humidity": { "type": "number" },
+        "transitHours": { "type": "number" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "scannedBy": { "type": "string" }
+      },
+      "required": ["batchId", "location", "locationType", "imageUrl", "spoilageScore", "timestamp"]
+    },
+    "Location": {
+      "title": "Handoff Point",
+      "description": "A physical location in the supply chain.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "type": { "type": "string", "enum": ["Origin", "Transit", "Storage", "Terminal"] },
+        "coordinates": { "type": "object", "properties": { "lat": { "type": "number" }, "lng": { "type": "number" } } }
+      },
+      "required": ["name", "type"]
+    }
+  },
+  "firestore": {
+    "batches": {
+      "schema": "Batch",
+      "description": "Collection of produce batches."
+    },
+    "scans": {
+      "schema": "Scan",
+      "description": "Collection of all scans performed."
+    },
+    "locations": {
+      "schema": "Location",
+      "description": "Collection of handoff points."
+    }
+  }
+}

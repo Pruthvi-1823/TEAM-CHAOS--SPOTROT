@@ -1,0 +1,82 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 0. Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // HELPER PRIMITIVES
+    function isSignedIn() { return request.auth != null; }
+    function isVerified() { return isSignedIn() && request.auth.token.email_verified == true; }
+    function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+
+    // VALIDATION BLUEPRINTS
+    function isValidBatch(data) {
+      return data.keys().hasAll(['title', 'type', 'origin', 'status', 'createdAt', 'createdBy']) &&
+             data.keys().size() == 6 &&
+             data.title is string && data.title.size() <= 100 &&
+             data.type is string && data.type.size() <= 50 &&
+             data.origin is string && data.origin.size() <= 100 &&
+             data.status in ['active', 'completed', 'spoiled'] &&
+             data.createdAt == request.time &&
+             data.createdBy == request.auth.uid;
+    }
+
+    function isValidScan(data) {
+      return data.keys().hasAll(['batchId', 'produceType', 'location', 'locationType', 'imageUrl', 'spoilageScore', 'predictedShelfLife', 'riskLevel', 'analysisNotes', 'reroutingDecision', 'temperature', 'humidity', 'transitHours', 'timestamp', 'scannedBy']) &&
+             data.keys().size() == 15 &&
+             isValidId(data.batchId) &&
+             data.produceType is string && data.produceType.size() <= 100 &&
+             data.location is string && data.location.size() <= 100 &&
+             data.locationType in ['Origin', 'Transit', 'Storage', 'Terminal'] &&
+             data.imageUrl is string && data.imageUrl.size() <= 10000000 &&
+             data.spoilageScore is number && data.spoilageScore >= 0 && data.spoilageScore <= 10 &&
+             data.riskLevel in ['Low', 'Medium', 'High'] &&
+             data.analysisNotes is string && data.analysisNotes.size() <= 5000 &&
+             data.reroutingDecision is string && data.reroutingDecision.size() <= 1000 &&
+             data.temperature is number &&
+             data.humidity is number &&
+             data.transitHours is number &&
+             data.timestamp == request.time &&
+             data.scannedBy == request.auth.uid;
+    }
+
+    function isValidLocation(data) {
+      return data.keys().hasAll(['name', 'type']) &&
+             data.name is string && data.name.size() <= 100 &&
+             data.type in ['Origin', 'Transit', 'Storage', 'Terminal'];
+    }
+
+    // COLLECTION MATCH BLOCKS
+    match /batches/{batchId} {
+      allow read: if isSignedIn();
+      allow create: if isVerified() && isValidBatch(incoming());
+      allow update: if isVerified() && 
+                    incoming().createdBy == existing().createdBy &&
+                    (
+                      // Action: Update Status
+                      (incoming().diff(existing()).affectedKeys().hasOnly(['status'])) ||
+                      // Action: Update Info
+                      (incoming().diff(existing()).affectedKeys().hasOnly(['title', 'type', 'origin']))
+                    );
+      allow delete: if false; // Batches are permanent for tracking records
+    }
+
+    match /scans/{scanId} {
+      allow read: if isSignedIn();
+      allow create: if isVerified() && 
+                    exists(/databases/$(database)/documents/batches/$(incoming().batchId)) &&
+                    isValidScan(incoming());
+      allow update: if false; // Scans are immutable records of a point-in-time
+      allow delete: if false;
+    }
+
+    match /locations/{locationId} {
+      allow read: if isSignedIn();
+      allow write: if isVerified(); // Simplification: any verified user can add locations for now
+    }
+  }
+}
