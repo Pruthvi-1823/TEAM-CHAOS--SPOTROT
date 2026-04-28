@@ -60,7 +60,7 @@ export async function predictSpoilage(data: {
   humidity: number,
   hoursInTransit: number
 }) {
-  const model = "gemini-3-flash-preview";
+  const model = "gemini-2.0-flash";
   
   const prompt = `Analyze the potential spoilage risk for a batch in the supply chain:
   Crop Type: ${data.cropType}
