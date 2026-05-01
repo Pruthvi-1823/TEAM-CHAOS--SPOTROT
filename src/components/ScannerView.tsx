@@ -83,7 +83,7 @@ export default function ScannerView({ onComplete }: { onComplete: () => void }) 
           origin: selectedLocation.name,
           status: 'active',
           createdAt: serverTimestamp(),
-          createdBy: auth.currentUser?.uid
+          createdBy: "demo-user"
         });
         batchId = newBatch.id;
       }
@@ -104,7 +104,7 @@ export default function ScannerView({ onComplete }: { onComplete: () => void }) 
         humidity: Math.floor(Math.random() * 30) + 50,    
         transitHours: Math.floor(Math.random() * 48) + 1, 
         timestamp: serverTimestamp(),
-        scannedBy: auth.currentUser?.uid
+        scannedBy: "demo-user"
       });
 
       onComplete();
